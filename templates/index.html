@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Captioning AI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .upload-container {
+            border: 2px dashed #ccc;
+            padding: 30px;
+            text-align: center;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        #preview {
+            max-width: 100%;
+            max-height: 400px;
+            display: none;
+            margin: 20px auto;
+        }
+        #result {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .loading {
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Image Captioning AI</h1>
+    <p>Upload an image to generate a description</p>
+    
+    <div class="upload-container">
+        <form id="uploadForm">
+            <input type="file" id="fileInput" name="file" accept="image/*" required>
+            <button type="submit">Generate Caption</button>
+        </form>
+    </div>
+    
+    <img id="preview" alt="Preview">
+    <div id="result"></div>
+    
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('fileInput');
+            const resultDiv = document.getElementById('result');
+            const preview = document.getElementById('preview');
+            const form = document.getElementById('uploadForm');
+            
+            // Reset UI
+            resultDiv.className = '';
+            resultDiv.textContent = '';
+            
+            const file = fileInput.files[0];
+            if (!file) {
+                resultDiv.className = 'error';
+                resultDiv.textContent = 'Please select an image first';
+                return;
+            }
+            
+            // Show preview
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = 'block';
+            
+            // Show loading state
+            resultDiv.className = 'loading';
+            resultDiv.textContent = 'Processing image...';
+            
+            try {
+                const formData = new FormData(form);
+                
+                const response = await fetch('/', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Unknown error occurred');
+                }
+                
+                resultDiv.className = 'success';
+                resultDiv.innerHTML = `
+                    <strong>Caption:</strong> ${data.caption}<br><br>
+                    <img src="${data.image_url}" style="max-width: 300px;">
+                `;
+                
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.textContent = `Error: ${error.message}`;
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
